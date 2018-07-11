@@ -36,6 +36,7 @@ public class RakamHttpRequest
     private Map<String, String> responseHeaders;
     private List<Cookie> responseCookies;
 
+
     @Override
     public boolean equals(Object o) {
         return o == this;
@@ -69,7 +70,12 @@ public class RakamHttpRequest
     }
 
     @Override
-    public HttpRequest setMethod(HttpMethod method) {
+    public HttpMethod method(){ return request.getMethod(); }
+
+
+    @Override
+    public HttpRequest setMethod(HttpMethod method)
+    {
         return request.setMethod(method);
     }
 
@@ -79,7 +85,12 @@ public class RakamHttpRequest
     }
 
     @Override
-    public HttpRequest setUri(String uri) {
+    public String uri(){ return request.getUri();}
+
+
+    @Override
+    public HttpRequest setUri(String uri)
+    {
         return request.setUri(uri);
     }
 
@@ -89,7 +100,12 @@ public class RakamHttpRequest
     }
 
     @Override
-    public io.netty.handler.codec.http.HttpRequest setProtocolVersion(HttpVersion version) {
+    public HttpVersion protocolVersion(){ return request.getProtocolVersion(); }
+
+
+    @Override
+    public io.netty.handler.codec.http.HttpRequest setProtocolVersion(HttpVersion version)
+    {
         return request.setProtocolVersion(version);
     }
 
@@ -103,9 +119,10 @@ public class RakamHttpRequest
     }
 
     @Override
-    public DecoderResult getDecoderResult() {
-        return request.getDecoderResult();
-    }
+    public DecoderResult getDecoderResult() { return request.getDecoderResult(); }
+
+    @Override
+    public DecoderResult decoderResult(){return request.getDecoderResult();}
 
     protected Consumer<InputStream> getBodyHandler() {
         return bodyHandler;
