@@ -37,6 +37,9 @@ import io.swagger.models.Operation;
 import io.swagger.models.Swagger;
 import io.swagger.util.Json;
 import io.swagger.util.PrimitiveType;
+import kotlin.reflect.KFunction;
+import kotlin.reflect.KParameter;
+import kotlin.reflect.jvm.ReflectJvmMapping;
 import org.rakam.server.http.HttpServerBuilder.IRequestParameterFactory;
 import org.rakam.server.http.IRequestParameter.BodyParameter;
 import org.rakam.server.http.IRequestParameter.HeaderParameter;
@@ -47,8 +50,6 @@ import org.rakam.server.http.annotations.HeaderParam;
 import org.rakam.server.http.annotations.JsonRequest;
 import org.rakam.server.http.annotations.QueryParam;
 import org.rakam.server.http.util.Lambda;
-import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
-import sun.reflect.generics.reflectiveObjects.TypeVariableImpl;
 
 import javax.inject.Named;
 import javax.management.InstanceAlreadyExistsException;
@@ -67,7 +68,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -99,6 +99,7 @@ import static io.netty.util.CharsetUtil.UTF_8;
 import static java.lang.String.format;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.Objects.requireNonNull;
+import static org.rakam.server.http.SwaggerReader.getActualType;
 import static org.rakam.server.http.util.Lambda.produceLambdaForFunction;
 
 public class HttpServer
@@ -355,22 +356,6 @@ public class HttpServer
         }
     }
 
-    private Type getActualType(Class readClass, Type parameterizedType)
-    {
-        // if the parameter has a generic type, it will be read as Object
-        // so we need to find the actual implementation and return that type.
-        if (parameterizedType instanceof TypeVariableImpl) {
-            TypeVariable[] genericParameters = readClass.getSuperclass().getTypeParameters();
-            Type[] implementations = ((ParameterizedTypeImpl) readClass.getGenericSuperclass()).getActualTypeArguments();
-            for (int i = 0; i < genericParameters.length; i++) {
-                if (genericParameters[i].getName().equals(((TypeVariableImpl) parameterizedType).getName())) {
-                    return implementations[i];
-                }
-            }
-        }
-        return parameterizedType;
-    }
-
     private List<RequestPreprocessor> getPreprocessorRequest(Method method)
     {
         return preProcessors.stream()
@@ -530,12 +515,17 @@ public class HttpServer
         }
     }
 
-    private static final ImmutableMap<Class<?>, Function<String, ?>> primitiveMapper = ImmutableMap.<Class<?>, Function<String, ?>>of(
-            int.class, Integer::parseInt,
-            long.class, Long::parseLong,
-            double.class, Double::parseDouble,
-            boolean.class, Boolean::parseBoolean,
-            float.class, Float::parseFloat);
+    private static final ImmutableMap<Class<?>, Function<String, ?>> PRIMITIVE_MAPPER = ImmutableMap.<Class<?>, Function<String, ?>>builder()
+            .put(int.class, Integer::parseInt)
+            .put(long.class, Long::parseLong)
+            .put(double.class, Double::parseDouble)
+            .put(boolean.class, Boolean::parseBoolean)
+            .put(float.class, Float::parseFloat)
+            .put(Integer.class, Integer::parseInt)
+            .put(Long.class, Long::parseLong)
+            .put(Double.class, Double::parseDouble)
+            .put(Boolean.class, Boolean::parseBoolean)
+            .put(Float.class, Float::parseFloat).build();
 
     private IRequestParameter getHandler(Parameter parameter, HttpService service, Method method)
     {
@@ -547,9 +537,9 @@ public class HttpServer
         else if (parameter.isAnnotationPresent(HeaderParam.class)) {
             HeaderParam param = parameter.getAnnotation(HeaderParam.class);
             Type actualType = getActualType(service.getClass(), parameter.getParameterizedType());
-            if (actualType.equals(String.class) || (actualType instanceof Class && primitiveMapper.containsKey(actualType))) {
+            if (actualType.equals(String.class) || (actualType instanceof Class && PRIMITIVE_MAPPER.containsKey(actualType))) {
                 return new HeaderParameter(param.value(), param.required(),
-                        actualType.equals(String.class) ? (Function) Function.identity() : primitiveMapper.get(actualType));
+                        actualType.equals(String.class) ? Function.identity() : PRIMITIVE_MAPPER.get(actualType));
             }
             else {
                 if (actualType instanceof Class && ((Class) actualType).isEnum()) {
@@ -592,9 +582,9 @@ public class HttpServer
         else if (parameter.isAnnotationPresent(QueryParam.class)) {
             QueryParam param = parameter.getAnnotation(QueryParam.class);
             Type actualType = getActualType(service.getClass(), parameter.getParameterizedType());
-            if (actualType.equals(String.class) || (actualType instanceof Class && primitiveMapper.containsKey(actualType))) {
+            if (actualType.equals(String.class) || (actualType instanceof Class && PRIMITIVE_MAPPER.containsKey(actualType))) {
                 return new IRequestParameter.QueryParameter(param.value(), param.required(),
-                        actualType.equals(String.class) ? Function.identity() : primitiveMapper.get(actualType));
+                        actualType.equals(String.class) ? Function.identity() : PRIMITIVE_MAPPER.get(actualType));
             }
             else {
                 if (actualType instanceof Class && ((Class) actualType).isEnum()) {
@@ -612,13 +602,23 @@ public class HttpServer
                 strings = PARAMETER_LOOKUP.lookupParameterNames(method);
             }
             catch (Exception e) {
-                throw new IllegalStateException(String.format("Parameter %s in method % does not have @ApiParam annotation" +
-                        " and class bytecode doesn't have parameter name info.", parameter.toString(), method.toString()));
+                throw new IllegalStateException(String.format("Parameter %s in method % does not have @ApiParam annotation and class bytecode doesn't have parameter name info.", parameter.toString(), method.toString()));
+            }
+
+            int parameterIndex = Arrays.asList(method.getParameters()).indexOf(parameter);
+
+            boolean required;
+            KFunction<?> kotlinFunction = ReflectJvmMapping.getKotlinFunction(method);
+            if(kotlinFunction != null) {
+                KParameter kParameter = kotlinFunction.getParameters().get(parameterIndex + 1);
+                required = !kParameter.getType().isMarkedNullable();
+            } else {
+                required = false;
             }
 
             return new BodyParameter(mapper,
-                    strings[Arrays.asList(method.getParameters()).indexOf(parameter)],
-                    parameter.getParameterizedType(), false);
+                    strings[parameterIndex],
+                    parameter.getParameterizedType(), required);
         }
     }
 
