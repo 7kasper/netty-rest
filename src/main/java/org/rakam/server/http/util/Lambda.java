@@ -1,8 +1,5 @@
 package org.rakam.server.http.util;
 
-import com.google.common.base.Throwables;
-import org.rakam.server.http.HttpService;
-
 import java.lang.invoke.CallSite;
 import java.lang.invoke.LambdaMetafactory;
 import java.lang.invoke.MethodHandle;
@@ -16,6 +13,7 @@ import java.util.function.Function;
 
 import static java.lang.invoke.MethodHandles.lookup;
 
+@SuppressWarnings("rawtypes")
 public class Lambda {
     private final static Method biConsumerAccept;
     private final static Method consumerAccept;
@@ -29,7 +27,7 @@ public class Lambda {
             functionApply = Function.class.getMethod("apply", Object.class);
             biFunctionApply = BiFunction.class.getMethod("apply", Object.class, Object.class);
         } catch (NoSuchMethodException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -37,7 +35,7 @@ public class Lambda {
         return produceLambda(sourceMethod, consumerAccept);
     }
 
-    public static BiFunction produceLambdaForBiFunction(Method method) {
+	public static BiFunction produceLambdaForBiFunction(Method method) {
         return produceLambda(method, biFunctionApply);
     }
 
@@ -58,7 +56,7 @@ public class Lambda {
         try {
             implementationMethod = caller.unreflect(sourceMethod);
         } catch (IllegalAccessException e) {
-           throw Throwables.propagate(e);
+           throw new RuntimeException(e);
         }
 
         final MethodType factoryMethodType = MethodType.methodType(targetMethod.getDeclaringClass());

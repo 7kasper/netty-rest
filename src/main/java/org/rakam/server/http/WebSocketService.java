@@ -16,7 +16,7 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import java.util.List;
 import java.util.Map;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.HOST;
+import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 
 public abstract class WebSocketService implements HttpRequestHandler {
     private WebSocketServerHandshaker handshaker;
@@ -57,7 +57,7 @@ public abstract class WebSocketService implements HttpRequestHandler {
             WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(request.context().channel());
         } else {
             HttpRequest request1 = request.getRequest();
-            DefaultFullHttpRequest defaultFullHttpRequest = new DefaultFullHttpRequest(request1.getProtocolVersion(), request1.getMethod(), request1.getUri());
+            DefaultFullHttpRequest defaultFullHttpRequest = new DefaultFullHttpRequest(request1.protocolVersion(), request1.method(), request1.uri());
             defaultFullHttpRequest.headers().set(request1.headers());
             handshaker.handshake(request.context().channel(), defaultFullHttpRequest);
             onOpen(new WebSocketRequest(request));

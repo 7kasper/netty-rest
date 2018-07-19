@@ -13,6 +13,7 @@ import java.util.function.Function;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 
+@SuppressWarnings("rawtypes")
 public interface IRequestParameter<T>
 {
 

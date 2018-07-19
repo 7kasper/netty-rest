@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.thoughtworks.paranamer.BytecodeReadingParanamer;
@@ -86,8 +85,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
-import static io.netty.handler.codec.http.HttpHeaders.Names.SET_COOKIE;
+import static io.netty.handler.codec.http.HttpHeaderNames.SET_COOKIE;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpMethod.GET;
 import static io.netty.handler.codec.http.HttpMethod.POST;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
@@ -102,6 +101,7 @@ import static java.util.Objects.requireNonNull;
 import static org.rakam.server.http.SwaggerReader.getActualType;
 import static org.rakam.server.http.util.Lambda.produceLambdaForFunction;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class HttpServer
 {
     private final static Logger LOGGER = Logger.get(HttpServer.class);
@@ -126,7 +126,7 @@ public class HttpServer
     private final boolean debugMode;
     private Channel channel;
 
-    private final ImmutableMap<Class, PrimitiveType> swaggerBeanMappings = ImmutableMap.<Class, PrimitiveType>builder()
+	private final ImmutableMap<Class, PrimitiveType> swaggerBeanMappings = ImmutableMap.<Class, PrimitiveType>builder()
             .put(LocalDate.class, PrimitiveType.DATE)
             .put(Duration.class, PrimitiveType.STRING)
             .put(Instant.class, PrimitiveType.DATE_TIME)
@@ -347,7 +347,7 @@ public class HttpServer
                 methodHandle = lookup().unreflect(method);
             }
             catch (IllegalAccessException e) {
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
 
             return new JsonParametrizedRequestHandler(this, mapper, bodyParams,
@@ -464,7 +464,7 @@ public class HttpServer
                 methodHandle = lookup().unreflect(method);
             }
             catch (IllegalAccessException e) {
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
 
             IRequestParameter[] parameters = Arrays.stream(method.getParameters())

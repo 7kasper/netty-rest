@@ -8,7 +8,9 @@ import java.util.List;
 import java.util.Map;
 
 public class HttpRequestException extends RuntimeException {
-    private final HttpResponseStatus statusCode;
+	private static final long serialVersionUID = 7171667809317673554L;
+
+	private final HttpResponseStatus statusCode;
     private final Map<String, Object> meta;
     private final List<JsonAPIError> errors;
 

@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
@@ -18,6 +17,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static java.lang.String.format;
 import static org.rakam.server.http.HttpServer.*;
 
+@SuppressWarnings("rawtypes")
 public class JsonParametrizedRequestHandler implements HttpRequestHandler {
     private final ObjectMapper mapper;
     private final List<IRequestParameter> bodyParams;
@@ -34,7 +34,7 @@ public class JsonParametrizedRequestHandler implements HttpRequestHandler {
         try {
             bodyError = DEFAULT_MAPPER.writeValueAsString(new ErrorMessage(ImmutableList.of(JsonAPIError.title("Body must be an JSON object.")), null));
         } catch (JsonProcessingException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
         emptyObject = DEFAULT_MAPPER.createObjectNode();
     }

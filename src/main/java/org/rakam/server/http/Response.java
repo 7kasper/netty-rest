@@ -7,6 +7,7 @@ import io.netty.handler.codec.http.cookie.DefaultCookie;
 
 import java.util.List;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class Response<T> {
     private final T data;
     private final HttpResponseStatus status;

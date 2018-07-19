@@ -19,6 +19,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static java.lang.String.format;
 import static org.rakam.server.http.HttpServer.returnError;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class JsonBeanRequestHandler implements HttpRequestHandler {
     private final ObjectMapper mapper;
     private final JavaType jsonClazz;

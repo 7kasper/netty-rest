@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
+@SuppressWarnings("rawtypes")
 public class HttpServerBuilder
 {
     private Set<HttpService> httpServices;
@@ -26,7 +27,7 @@ public class HttpServerBuilder
     private Swagger swagger;
     private EventLoopGroup eventLoopGroup;
     private ObjectMapper mapper;
-    private Map<Class, PrimitiveType> overridenMappings;
+	private Map<Class, PrimitiveType> overridenMappings;
     private Builder<PreprocessorEntry> jsonRequestPreprocessors = ImmutableList.builder();
     private Builder<PostProcessorEntry> postProcessorEntryBuilder = ImmutableList.builder();
     private boolean proxyProtocol;

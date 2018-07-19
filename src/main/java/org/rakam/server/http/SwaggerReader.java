@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
@@ -67,7 +66,6 @@ import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -79,6 +77,7 @@ import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 
+@SuppressWarnings({"rawtypes", "unchecked", "restriction"})
 public class SwaggerReader
 {
     private final Logger LOGGER = LoggerFactory.getLogger(SwaggerReader.class);
@@ -99,7 +98,9 @@ public class SwaggerReader
         }
         mapper.registerModule(
                 new SimpleModule("swagger", Version.unknownVersion()) {
-                    @Override
+					private static final long serialVersionUID = 3427800345670922956L;
+
+					@Override
                     public void setupModule(SetupContext context) {
                         context.insertAnnotationIntrospector(new SwaggerJacksonAnnotationIntrospector());
                     }
@@ -411,7 +412,7 @@ public class SwaggerReader
                             .getGenericReturnType();
                 }
                 catch (NoSuchMethodException e) {
-                    throw Throwables.propagate(e);
+                    throw new RuntimeException(e);
                 }
             }
             return type.getActualTypeArguments()[0];
@@ -420,7 +421,7 @@ public class SwaggerReader
         return method.getGenericReturnType();
     }
 
-    private static Class getActualReturnClass(Method method)
+/*    private static Class getActualReturnClass(Method method)
     {
         if (method.getReturnType().equals(CompletableFuture.class)) {
             Type responseClass = method.getGenericReturnType();
@@ -434,7 +435,7 @@ public class SwaggerReader
         }
 
         return method.getReturnType();
-    }
+    }*/
 
     protected Set<String> extractTags(Api api)
     {
@@ -535,7 +536,8 @@ public class SwaggerReader
         return responseHeaders;
     }
 
-    public Operation parseMethod(Class readClass, Method method)
+    @SuppressWarnings("deprecation")
+	public Operation parseMethod(Class readClass, Method method)
     {
         Operation operation = new Operation();
 
@@ -978,7 +980,7 @@ public class SwaggerReader
         return builder.build();
     }
 
-    private List<Parameter> getParameters(Class<?> cls, Type type, Annotation[] annotations)
+ /*   private List<Parameter> getParameters(Class<?> cls, Type type, Annotation[] annotations)
     {
         // look for path, query
         boolean isArray = isMethodArgumentAnArray(cls, type);
@@ -1044,7 +1046,7 @@ public class SwaggerReader
         }
 
         return parameters;
-    }
+    }*/
 
     public String extractOperationMethod(ApiOperation apiOperation, Method method)
     {

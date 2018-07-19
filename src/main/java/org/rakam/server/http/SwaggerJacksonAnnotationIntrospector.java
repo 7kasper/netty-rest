@@ -19,7 +19,10 @@ import java.util.Collections;
 import java.util.List;
 
 public class SwaggerJacksonAnnotationIntrospector extends AnnotationIntrospector {
-    @Override
+
+	private static final long serialVersionUID = 1L;
+
+	@Override
     public Version version()
     {
         return PackageVersion.VERSION;

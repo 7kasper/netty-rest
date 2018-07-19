@@ -19,12 +19,13 @@ import java.time.Duration;
 import java.util.*;
 import java.util.function.Consumer;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.*;
+import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 import static io.netty.handler.codec.http.cookie.ServerCookieDecoder.STRICT;
 import static io.netty.util.CharsetUtil.UTF_8;
 
+@SuppressWarnings("rawtypes")
 public class RakamHttpRequest
         implements HttpRequest, Comparable {
     private final static Logger LOGGER = Logger.get(HttpServer.class);
@@ -66,11 +67,11 @@ public class RakamHttpRequest
 
     @Override
     public HttpMethod getMethod() {
-        return request.getMethod();
+        return request.method();
     }
 
     @Override
-    public HttpMethod method(){ return request.getMethod(); }
+    public HttpMethod method(){ return request.method(); }
 
 
     @Override
@@ -81,11 +82,11 @@ public class RakamHttpRequest
 
     @Override
     public String getUri() {
-        return request.getUri();
+        return request.uri();
     }
 
     @Override
-    public String uri(){ return request.getUri();}
+    public String uri(){ return request.uri();}
 
 
     @Override
@@ -96,11 +97,11 @@ public class RakamHttpRequest
 
     @Override
     public HttpVersion getProtocolVersion() {
-        return request.getProtocolVersion();
+        return request.protocolVersion();
     }
 
     @Override
-    public HttpVersion protocolVersion(){ return request.getProtocolVersion(); }
+    public HttpVersion protocolVersion(){ return request.protocolVersion(); }
 
 
     @Override
@@ -119,10 +120,10 @@ public class RakamHttpRequest
     }
 
     @Override
-    public DecoderResult getDecoderResult() { return request.getDecoderResult(); }
+    public DecoderResult getDecoderResult() { return request.decoderResult(); }
 
     @Override
-    public DecoderResult decoderResult(){return request.getDecoderResult();}
+    public DecoderResult decoderResult(){return request.decoderResult();}
 
     protected Consumer<InputStream> getBodyHandler() {
         return bodyHandler;
@@ -176,14 +177,14 @@ public class RakamHttpRequest
 
     public Map<String, List<String>> params() {
         if (qs == null) {
-            qs = new QueryStringDecoder(request.getUri());
+            qs = new QueryStringDecoder(request.uri());
         }
         return qs.parameters();
     }
 
     public String path() {
         if (qs == null) {
-            qs = new QueryStringDecoder(request.getUri());
+            qs = new QueryStringDecoder(request.uri());
         }
         return qs.path();
     }
@@ -218,7 +219,7 @@ public class RakamHttpRequest
         if (response == null) {
             response = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.wrappedBuffer(new byte[0]));
         }
-        boolean keepAlive = HttpHeaders.isKeepAlive(request);
+        boolean keepAlive = HttpUtil.isKeepAlive(request);
 
         String origin = request.headers().get(ORIGIN);
         if (origin != null) {
@@ -239,7 +240,7 @@ public class RakamHttpRequest
 
         if (keepAlive) {
             response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
-            response.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
+            response.headers().set(CONNECTION, HttpHeaderValues.KEEP_ALIVE);
 
             ctx.writeAndFlush(response);
         } else {
@@ -277,7 +278,7 @@ public class RakamHttpRequest
         HttpResponse response = new DefaultHttpResponse(HTTP_1_1, OK);
         response.headers().set(CONTENT_TYPE, "text/event-stream");
         response.headers().set(ACCESS_CONTROL_ALLOW_ORIGIN, "*");
-        response.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
+        response.headers().set(CONNECTION, HttpHeaderValues.KEEP_ALIVE);
         return streamResponse(response);
     }
 

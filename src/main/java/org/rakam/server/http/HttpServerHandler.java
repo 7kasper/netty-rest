@@ -25,13 +25,14 @@ import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERR
 import static io.netty.handler.codec.http.HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class HttpServerHandler
         extends ChannelInboundHandlerAdapter
 {
     private static InputStream EMPTY_BODY = new ByteArrayInputStream(new byte[] {});
 
     private final HttpServer server;
-    private final ConcurrentSet activeChannels;
+	private final ConcurrentSet activeChannels;
     protected RakamHttpRequest request;
     private List<ByteBuf> body;
 
@@ -73,8 +74,8 @@ public class HttpServerHandler
             this.request.setRequest((io.netty.handler.codec.http.HttpRequest) msg);
 
             if (msg instanceof HttpObject) {
-                if (((HttpRequest) msg).getDecoderResult().isFailure()) {
-                    Throwable cause = ((HttpRequest) msg).getDecoderResult().cause();
+                if (((HttpRequest) msg).decoderResult().isFailure()) {
+                    Throwable cause = ((HttpRequest) msg).decoderResult().cause();
                     if (request == null) {
                         request = createRequest(ctx);
                     }

@@ -5,9 +5,11 @@ import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import io.netty.util.AttributeKey;
+import io.netty.util.AttributeMap;
 
 import java.util.*;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class RouteMatcher
 {
     private HashMap<PatternBinding, HttpRequestHandler> routes = new HashMap();
@@ -17,7 +19,7 @@ public class RouteMatcher
 
     public void handle(ChannelHandlerContext ctx, WebSocketFrame frame)
     {
-        String path = ctx.attr(PATH).get();
+        String path = ((AttributeMap) ctx).attr(PATH).get();
         final Object handler = routes.get(new PatternBinding(HttpMethod.GET, path));
         if (handler != null) {
             if (handler instanceof WebSocketService) {
@@ -42,7 +44,7 @@ public class RouteMatcher
         final HttpRequestHandler handler = routes.get(new PatternBinding(method, path));
         if (handler != null) {
             if (handler instanceof WebSocketService) {
-                request.context().attr(PATH).set(path);
+            	((AttributeMap) request.context()).attr(PATH).set(path);
             }
             handler.handle(request);
         }
